@@ -1,0 +1,35 @@
+@baseUrl = http://localhost:8092
+@loansUrl = {{baseUrl}}/api/v1/loans
+
+# GET health
+GET {{baseUrl}}/actuator/health
+
+###
+
+# Create a loan
+POST {{loansUrl}}
+Content-Type: application/json
+
+{
+  "mobileNumber": "+49171123456789"
+}
+
+###
+
+# Fetch a loan
+GET {{loansUrl}}/+49171123456789
+
+###
+
+# Update a loan
+PUT {{loansUrl}}
+Content-Type: application/json
+
+{
+  "mobileNumber": "+49171123456789",
+  "loanNumber": "100018717873",
+  "loanType": "Home Loan",
+  "totalLoan": 76543,
+  "amountPaid": 12345,
+  "outstandingAmount": 64098
+}
