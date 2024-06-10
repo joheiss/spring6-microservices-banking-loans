@@ -129,7 +129,7 @@ public class LoansController {
             @ApiResponse(responseCode = "404", description = "HTTP Status NOT_FOUND", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
                     @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/loans/+122234567890\", \"errorCode\": \"404\", \"errorMessage\": \"Loan not found ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE)),
             @ApiResponse(responseCode = "500", description = "HTTP Status INTERNAL_SERVER_ERROR", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
-                    @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/accounts\", \"errorCode\": \"500\", \"errorMessage\": \"An error occurred ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE))
+                    @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/loans\", \"errorCode\": \"500\", \"errorMessage\": \"An error occurred ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE))
     })
     @DeleteMapping(LOANS_MOBILENUMBER_PATH)
     public ResponseEntity<ResponseDto> deleteLoan(@PathVariable String mobileNumber) {

@@ -264,7 +264,7 @@ public class LoansControllerIT {
 
     assertThatExceptionOfType(ConstraintViolationException.class)
         .isThrownBy(() -> loansController.updateLoan(loanDto))
-        .withMessageContainingAll("total", "paid", "outstanding", "type");
+        .withMessageContainingAll("totalLoan", "amountPaid", "outstandingAmount", "loanType");
   }
 
   @Transactional
@@ -284,6 +284,6 @@ public class LoansControllerIT {
 
     assertThatExceptionOfType(ConstraintViolationException.class)
         .isThrownBy(() -> loansController.updateLoan(loanDto))
-        .withMessageContainingAll("mobile", "total", "type");
+        .withMessageContainingAll("mobileNumber", "totalLoan", "loanType");
   }
 }
