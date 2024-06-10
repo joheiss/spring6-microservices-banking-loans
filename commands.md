@@ -3,3 +3,6 @@ mvn spring-boot:build-image
 
 ### run docker container
 docker run -d -p 8092:8092 joheiss/sb3-loans:v1
+
+### push docker image to docker hub
+docker image push docker.io/joheiss/sb3-loans:v1
