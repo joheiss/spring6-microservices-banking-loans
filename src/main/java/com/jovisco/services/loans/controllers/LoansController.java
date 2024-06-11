@@ -1,5 +1,7 @@
 package com.jovisco.services.loans.controllers;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -18,6 +20,7 @@ import com.jovisco.services.loans.constants.LoansConstants;
 import com.jovisco.services.loans.dtos.CreateLoanDto;
 import com.jovisco.services.loans.dtos.ErrorResponseDto;
 import com.jovisco.services.loans.dtos.LoanDto;
+import com.jovisco.services.loans.dtos.LoansContactInfoDto;
 import com.jovisco.services.loans.dtos.ResponseDto;
 import com.jovisco.services.loans.services.LoansService;
 
@@ -38,119 +41,187 @@ import lombok.RequiredArgsConstructor;
 @Validated
 public class LoansController {
 
-    public static final String LOANS_PATH = "/loans";
-    public static final String LOANS_MOBILENUMBER_PATH = LOANS_PATH + "/{mobileNumber}";
+        public static final String LOANS_PATH = "/loans";
+        public static final String LOANS_MOBILENUMBER_PATH = LOANS_PATH + "/{mobileNumber}";
+        public static final String LOANS_VERSION_PATH = LOANS_PATH + "/version";
 
-    private final LoansService loansService;
+        private final LoansService loansService;
 
-    @Operation(summary = "Fetch a single loan by the customer's mobile number", description = "Fetch data from loan for a given mobile number")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "HTTP Status OK"),
-            @ApiResponse(responseCode = "404", description = "HTTP Status NOT_FOUND", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
-                    @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/loans/+122234567890\", \"errorCode\": \"404\", \"errorMessage\": \"Loan not found ...\", \"errorTime\": \"2024-07-04T11:12:13\"}")
-            }, mediaType = MediaType.APPLICATION_JSON_VALUE)),
-            @ApiResponse(responseCode = "500", description = "HTTP Status INTERNAL_SERVER_ERROR", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
-                    @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/loans\", \"errorCode\": \"500\", \"errorMessage\": \"An error occurred ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE))
-    })
+        private final LoansContactInfoDto loansContactInfoDto;
 
-    @GetMapping(LOANS_MOBILENUMBER_PATH)
-    public ResponseEntity<LoanDto> fetchLoan(@PathVariable String mobileNumber) {
+        private final Environment environment;
 
-        var loanDto = loansService.fetchLoan(mobileNumber);
+        @Value("${build.version}")
+        private String buildVersion;
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(loanDto);
-    }
+        @Operation(summary = "Fetch a single loan by the customer's mobile number", description = "Fetch data from loan for a given mobile number")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "HTTP Status OK"),
+                        @ApiResponse(responseCode = "404", description = "HTTP Status NOT_FOUND", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
+                                        @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/loans/+122234567890\", \"errorCode\": \"404\", \"errorMessage\": \"Loan not found ...\", \"errorTime\": \"2024-07-04T11:12:13\"}")
+                        }, mediaType = MediaType.APPLICATION_JSON_VALUE)),
+                        @ApiResponse(responseCode = "500", description = "HTTP Status INTERNAL_SERVER_ERROR", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
+                                        @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/loans\", \"errorCode\": \"500\", \"errorMessage\": \"An error occurred ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE))
+        })
 
-    @Operation(summary = "Create a loan", description = "Create a loan")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "HTTP Status CREATED", content = @Content(schema = @Schema(implementation = ResponseDto.class), examples = {
-                    @ExampleObject(value = "{\"statusCode\": \"201\", \"statusMessage\": \"Loan created successfully\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE)),
-            @ApiResponse(responseCode = "400", description = "HTTP Status BAD_REQUEST", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
-            @ApiResponse(responseCode = "500", description = "HTTP Status INTERNAL_SERVER_ERROR", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
-                    @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/accounts\", \"errorCode\": \"500\", \"errorMessage\": \"An error occurred ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE))
-    })
+        @GetMapping(LOANS_MOBILENUMBER_PATH)
+        public ResponseEntity<LoanDto> fetchLoan(@PathVariable String mobileNumber) {
 
-    @PostMapping(LOANS_PATH)
-    public ResponseEntity<ResponseDto> createLoan(@Valid @RequestBody CreateLoanDto createLoanDto) {
+                var loanDto = loansService.fetchLoan(mobileNumber);
 
-        // create loan
-        loansService.createLoan(createLoanDto);
-
-        // store mobile number in location header
-        var headers = new HttpHeaders();
-        headers.add("Location", LOANS_PATH + "/" + createLoanDto.getMobileNumber());
-
-        var body = ResponseDto.builder()
-                .statusCode(LoansConstants.STATUS_201)
-                .statusMessage(LoansConstants.MESSAGE_201)
-                .build();
-
-        return new ResponseEntity<ResponseDto>(body, headers, HttpStatus.CREATED);
-    }
-
-    @Operation(summary = "Update a loan", description = "Update a loan")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "HTTP Status OK"),
-            @ApiResponse(responseCode = "400", description = "HTTP Status BAD_REQUEST", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
-            @ApiResponse(responseCode = "404", description = "HTTP Status NOT_FOUND", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
-                    @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/loans/+122234567890\", \"errorCode\": \"404\", \"errorMessage\": \"Loan not found ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE)),
-            @ApiResponse(responseCode = "500", description = "HTTP Status INTERNAL_SERVER_ERROR", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
-                    @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/loans\", \"errorCode\": \"500\", \"errorMessage\": \"An error occurred ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE))
-    })
-
-    @PutMapping(LOANS_PATH)
-    public ResponseEntity<ResponseDto> updateLoan(@Valid @RequestBody LoanDto loanDto) {
-
-        var isUpdated = loansService.updateLoan(loanDto);
-
-        if (isUpdated) {
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(ResponseDto.builder()
-                            .statusCode(LoansConstants.STATUS_200)
-                            .statusMessage(LoansConstants.MESSAGE_200)
-                            .build());
-        } else {
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ResponseDto.builder()
-                            .statusCode(LoansConstants.STATUS_500)
-                            .statusMessage(LoansConstants.MESSAGE_500)
-                            .build());
-
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(loanDto);
         }
-    }
 
-    @Operation(summary = "Delete a loan", description = "Delete aloan by mobile number")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "HTTP Status OK"),
-            @ApiResponse(responseCode = "404", description = "HTTP Status NOT_FOUND", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
-                    @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/loans/+122234567890\", \"errorCode\": \"404\", \"errorMessage\": \"Loan not found ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE)),
-            @ApiResponse(responseCode = "500", description = "HTTP Status INTERNAL_SERVER_ERROR", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
-                    @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/loans\", \"errorCode\": \"500\", \"errorMessage\": \"An error occurred ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE))
-    })
-    @DeleteMapping(LOANS_MOBILENUMBER_PATH)
-    public ResponseEntity<ResponseDto> deleteLoan(@PathVariable String mobileNumber) {
+        @Operation(summary = "Create a loan", description = "Create a loan")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "201", description = "HTTP Status CREATED", content = @Content(schema = @Schema(implementation = ResponseDto.class), examples = {
+                                        @ExampleObject(value = "{\"statusCode\": \"201\", \"statusMessage\": \"Loan created successfully\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE)),
+                        @ApiResponse(responseCode = "400", description = "HTTP Status BAD_REQUEST", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+                        @ApiResponse(responseCode = "500", description = "HTTP Status INTERNAL_SERVER_ERROR", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
+                                        @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/accounts\", \"errorCode\": \"500\", \"errorMessage\": \"An error occurred ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE))
+        })
 
-        var isDeleted = loansService.deleteLoan(mobileNumber);
+        @PostMapping(LOANS_PATH)
+        public ResponseEntity<ResponseDto> createLoan(@Valid @RequestBody CreateLoanDto createLoanDto) {
 
-        if (isDeleted) {
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(ResponseDto.builder()
-                            .statusCode(LoansConstants.STATUS_200)
-                            .statusMessage(LoansConstants.MESSAGE_200)
-                            .build());
-        } else {
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ResponseDto.builder()
-                            .statusCode(LoansConstants.STATUS_500)
-                            .statusMessage(LoansConstants.MESSAGE_500)
-                            .build());
+                // create loan
+                loansService.createLoan(createLoanDto);
+
+                // store mobile number in location header
+                var headers = new HttpHeaders();
+                headers.add("Location", LOANS_PATH + "/" + createLoanDto.getMobileNumber());
+
+                var body = ResponseDto.builder()
+                                .statusCode(LoansConstants.STATUS_201)
+                                .statusMessage(LoansConstants.MESSAGE_201)
+                                .build();
+
+                return new ResponseEntity<ResponseDto>(body, headers, HttpStatus.CREATED);
         }
-    }
+
+        @Operation(summary = "Update a loan", description = "Update a loan")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "HTTP Status OK"),
+                        @ApiResponse(responseCode = "400", description = "HTTP Status BAD_REQUEST", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+                        @ApiResponse(responseCode = "404", description = "HTTP Status NOT_FOUND", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
+                                        @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/loans/+122234567890\", \"errorCode\": \"404\", \"errorMessage\": \"Loan not found ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE)),
+                        @ApiResponse(responseCode = "500", description = "HTTP Status INTERNAL_SERVER_ERROR", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
+                                        @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/loans\", \"errorCode\": \"500\", \"errorMessage\": \"An error occurred ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE))
+        })
+
+        @PutMapping(LOANS_PATH)
+        public ResponseEntity<ResponseDto> updateLoan(@Valid @RequestBody LoanDto loanDto) {
+
+                var isUpdated = loansService.updateLoan(loanDto);
+
+                if (isUpdated) {
+                        return ResponseEntity
+                                        .status(HttpStatus.OK)
+                                        .body(ResponseDto.builder()
+                                                        .statusCode(LoansConstants.STATUS_200)
+                                                        .statusMessage(LoansConstants.MESSAGE_200)
+                                                        .build());
+                } else {
+                        return ResponseEntity
+                                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body(ResponseDto.builder()
+                                                        .statusCode(LoansConstants.STATUS_500)
+                                                        .statusMessage(LoansConstants.MESSAGE_500)
+                                                        .build());
+
+                }
+        }
+
+        @Operation(summary = "Delete a loan", description = "Delete aloan by mobile number")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "HTTP Status OK"),
+                        @ApiResponse(responseCode = "404", description = "HTTP Status NOT_FOUND", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
+                                        @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/loans/+122234567890\", \"errorCode\": \"404\", \"errorMessage\": \"Loan not found ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE)),
+                        @ApiResponse(responseCode = "500", description = "HTTP Status INTERNAL_SERVER_ERROR", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
+                                        @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/loans\", \"errorCode\": \"500\", \"errorMessage\": \"An error occurred ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE))
+        })
+        @DeleteMapping(LOANS_MOBILENUMBER_PATH)
+        public ResponseEntity<ResponseDto> deleteLoan(@PathVariable String mobileNumber) {
+
+                var isDeleted = loansService.deleteLoan(mobileNumber);
+
+                if (isDeleted) {
+                        return ResponseEntity
+                                        .status(HttpStatus.OK)
+                                        .body(ResponseDto.builder()
+                                                        .statusCode(LoansConstants.STATUS_200)
+                                                        .statusMessage(LoansConstants.MESSAGE_200)
+                                                        .build());
+                } else {
+                        return ResponseEntity
+                                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body(ResponseDto.builder()
+                                                        .statusCode(LoansConstants.STATUS_500)
+                                                        .statusMessage(LoansConstants.MESSAGE_500)
+                                                        .build());
+                }
+        }
+
+        @Operation(summary = "Get build information", description = "Get the current build version that is deployed for this service")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "HTTP Status OK", content = @Content(examples = {
+                                        @ExampleObject(value = "1.0.0") }, mediaType = MediaType.TEXT_PLAIN_VALUE)),
+                        @ApiResponse(responseCode = "500", description = "HTTP Status INTERNAL_SERVER_ERROR", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
+                                        @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/cards/version\", \"errorCode\": \"500\", \"errorMessage\": \"An error occurred ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE))
+        })
+
+        @GetMapping(path = LOANS_VERSION_PATH, produces = MediaType.TEXT_PLAIN_VALUE)
+        public ResponseEntity<String> getBuildVersion() {
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(buildVersion);
+        }
+
+        @Operation(summary = "Get Java version", description = "Get the current Java version that is deployed for this service")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "HTTP Status OK", content = @Content(examples = {
+                                        @ExampleObject(value = "1.0.0") }, mediaType = MediaType.TEXT_PLAIN_VALUE)),
+                        @ApiResponse(responseCode = "500", description = "HTTP Status INTERNAL_SERVER_ERROR", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
+                                        @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/cards/java-version\", \"errorCode\": \"500\", \"errorMessage\": \"An error occurred ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE))
+        })
+
+        @GetMapping(path = LOANS_PATH + "/java-version", produces = MediaType.TEXT_PLAIN_VALUE)
+        public ResponseEntity<String> getJavaVersion() {
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(environment.getProperty("JAVA_HOME"));
+        }
+
+        @Operation(summary = "Get environment variable", description = "Get the current value of an environment variable that is deployed for this service")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "HTTP Status OK", content = @Content(examples = {
+                                        @ExampleObject(value = "anything") }, mediaType = MediaType.TEXT_PLAIN_VALUE)),
+                        @ApiResponse(responseCode = "500", description = "HTTP Status INTERNAL_SERVER_ERROR", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
+                                        @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/cards/java-version\", \"errorCode\": \"500\", \"errorMessage\": \"An error occurred ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE))
+        })
+
+        @GetMapping(path = LOANS_PATH + "/env-variable/{envVariable}", produces = MediaType.TEXT_PLAIN_VALUE)
+        public ResponseEntity<String> getEnvVariable(@PathVariable String envVariable) {
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(environment.getProperty(envVariable));
+        }
+
+        @Operation(summary = "Get contact information", description = "Get contact information for this service")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "HTTP Status OK", content = @Content(schema = @Schema(implementation = LoansContactInfoDto.class), examples = {
+                                        @ExampleObject(value = "{\"message\": \"Welcome to ...\", \"contact\": {\"name\": \"Jane Doe\", \"email\": \"jane@example.com\"}, \"support\": [\"+1 222 333 4444\", \"+1 555 666 7777\"]}") }, mediaType = MediaType.APPLICATION_JSON_VALUE)),
+                        @ApiResponse(responseCode = "500", description = "HTTP Status INTERNAL_SERVER_ERROR", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
+                                        @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/cards/contact-info\", \"errorCode\": \"500\", \"errorMessage\": \"An error occurred ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE))
+        })
+
+        @GetMapping(path = LOANS_PATH + "/contact-info", produces = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<LoansContactInfoDto> getContactInfo() {
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(loansContactInfoDto);
+        }
 
 }
