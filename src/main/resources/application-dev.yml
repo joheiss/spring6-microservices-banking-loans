@@ -54,6 +54,10 @@ management:
                 # include: "refresh"
                 # include: "bus-refresh"
     endpoint:
+        health:
+            probes:
+                enabled: true
+
         shutdown:
             enabled: true
     info:
