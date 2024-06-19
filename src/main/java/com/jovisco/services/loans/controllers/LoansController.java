@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,8 +34,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Tag(name = "CRUD REST APIs for Loans in Banking Microservices", description = "CRUD REST APIs to CREATE, READ, UPDATE and DELETE Loans in Banking Microservices")
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping(path = "/api/v1", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -65,8 +68,13 @@ public class LoansController {
         })
 
         @GetMapping(LOANS_MOBILENUMBER_PATH)
-        public ResponseEntity<LoanDto> fetchLoan(@PathVariable String mobileNumber) {
+        public ResponseEntity<LoanDto> fetchLoan(
+                @RequestHeader("jovisco-banking-correlation-id") String correlationId,
+                @PathVariable String mobileNumber
+        ) {
 
+                log.debug("jovisco-banking-correlation-id received: {}", correlationId);
+                
                 var loanDto = loansService.fetchLoan(mobileNumber);
 
                 return ResponseEntity

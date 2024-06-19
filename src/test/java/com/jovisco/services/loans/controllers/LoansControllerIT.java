@@ -49,6 +49,8 @@ public class LoansControllerIT {
 
   MockMvc mockMvc;
 
+  final String correlationId = "test-correlation-id";
+
   @BeforeEach
   void setUp() {
     mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
@@ -183,7 +185,7 @@ public class LoansControllerIT {
     loansController.createLoan(createDto);
 
     // check that loan can be fetched
-    var response = loansController.fetchLoan(createDto.getMobileNumber());
+    var response = loansController.fetchLoan(correlationId, createDto.getMobileNumber());
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody().getMobileNumber()).isEqualTo(createDto.getMobileNumber());
   }
@@ -193,7 +195,7 @@ public class LoansControllerIT {
 
     // check that an exception is thrown
     assertThatExceptionOfType(ResourceNotFoundException.class)
-        .isThrownBy(() -> loansController.fetchLoan("+999999999999"));
+        .isThrownBy(() -> loansController.fetchLoan(correlationId, "+999999999999"));
   }
 
   @Transactional
@@ -206,7 +208,7 @@ public class LoansControllerIT {
     loansController.createLoan(createDto);
 
     // ... fetch it, and update fields
-    var loanDto = loansController.fetchLoan(createDto.getMobileNumber()).getBody();
+    var loanDto = loansController.fetchLoan(correlationId, createDto.getMobileNumber()).getBody();
     loanDto.setTotalLoan(33333);
     loanDto.setAmountPaid(22222);
     loanDto.setOutstandingAmount(11111);
@@ -230,7 +232,7 @@ public class LoansControllerIT {
     loansController.createLoan(createDto);
 
     // ... fetch it, and modify fields
-    var loanDto = loansController.fetchLoan(createDto.getMobileNumber()).getBody();
+    var loanDto = loansController.fetchLoan(correlationId, createDto.getMobileNumber()).getBody();
     loanDto.setTotalLoan(33333);
     loanDto.setAmountPaid(22222);
     loanDto.setOutstandingAmount(11111);
@@ -240,7 +242,7 @@ public class LoansControllerIT {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
     // check that fields have been updated with the correct values
-    var updated = loansController.fetchLoan(loanDto.getMobileNumber()).getBody();
+    var updated = loansController.fetchLoan(correlationId, loanDto.getMobileNumber()).getBody();
     assertThat(updated.getTotalLoan()).isEqualTo(loanDto.getTotalLoan());
     assertThat(updated.getAmountPaid()).isEqualTo(loanDto.getAmountPaid());
     assertThat(updated.getOutstandingAmount()).isEqualTo(loanDto.getOutstandingAmount());
@@ -256,7 +258,7 @@ public class LoansControllerIT {
     loansController.createLoan(createDto);
 
     // ... fetch it, and modify fields
-    var loanDto = loansController.fetchLoan(createDto.getMobileNumber()).getBody();
+    var loanDto = loansController.fetchLoan(correlationId, createDto.getMobileNumber()).getBody();
     loanDto.setTotalLoan(-33333);
     loanDto.setAmountPaid(-22222);
     loanDto.setOutstandingAmount(-11111);
@@ -277,7 +279,7 @@ public class LoansControllerIT {
     loansController.createLoan(createDto);
 
     // ... fetch it, and modify fields
-    var loanDto = loansController.fetchLoan(createDto.getMobileNumber()).getBody();
+    var loanDto = loansController.fetchLoan(correlationId, createDto.getMobileNumber()).getBody();
     loanDto.setMobileNumber(null);
     loanDto.setTotalLoan(0);
     loanDto.setLoanType(null);
