@@ -74,4 +74,4 @@ logging:
         com:
             jovisco:
                 services:
-                    loans: debug
+                    loans: TRACE
