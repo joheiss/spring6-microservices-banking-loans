@@ -25,6 +25,7 @@ import com.jovisco.services.loans.dtos.ContactInfoDto;
 import com.jovisco.services.loans.dtos.ResponseDto;
 import com.jovisco.services.loans.services.LoansService;
 
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -194,6 +195,7 @@ public class LoansController {
                         @ApiResponse(responseCode = "500", description = "HTTP Status INTERNAL_SERVER_ERROR", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class), examples = {
                                         @ExampleObject(value = "{\"apiPath\": \"uri=/api/v1/cards/java-version\", \"errorCode\": \"500\", \"errorMessage\": \"An error occurred ...\", \"errorTime\": \"2024-07-04T11:12:13\"}") }, mediaType = MediaType.APPLICATION_JSON_VALUE))
         })
+        @RateLimiter(name = "getJavaVersion", fallbackMethod = "getJavaVersionFallback")
 
         @GetMapping(path = LOANS_PATH + "/java-version", produces = MediaType.TEXT_PLAIN_VALUE)
         public ResponseEntity<String> getJavaVersion() {
@@ -201,6 +203,13 @@ public class LoansController {
                                 .status(HttpStatus.OK)
                                 .body(environment.getProperty("JAVA_HOME"));
         }
+
+        public ResponseEntity<String> getJavaVersionFallback(Throwable throwable) {
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body("Java 21");
+        }
+
 
         @Operation(summary = "Get environment variable", description = "Get the current value of an environment variable that is deployed for this service")
         @ApiResponses({
