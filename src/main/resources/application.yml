@@ -64,6 +64,9 @@ management:
   info:
     env:
       enabled: true
+  metrics:
+      tags:
+          application: ${spring.application.name}
 
 endpoints:
   shutdown:
@@ -99,6 +102,6 @@ resilience4j:
 logging:
   level:
     com:
-      jovisco:
-        services:
-          loans: TRACE
+      jovisco: DEBUG
+  pattern:
+    level: "%5p [${spring.application.name},%X{trace_id},%X{span_id}]"
