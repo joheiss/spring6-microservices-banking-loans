@@ -70,13 +70,14 @@ public class LoansController {
 
         @GetMapping(LOANS_MOBILENUMBER_PATH)
         public ResponseEntity<LoanDto> fetchLoan(
-                @RequestHeader("jovisco-banking-correlation-id") String correlationId,
-                @PathVariable String mobileNumber
-        ) {
+                        @RequestHeader("jovisco-banking-correlation-id") String correlationId,
+                        @PathVariable String mobileNumber) {
 
-                log.debug("jovisco-banking-correlation-id received: {}", correlationId);
-                
+                log.debug("fetchLoan started");
+
                 var loanDto = loansService.fetchLoan(mobileNumber);
+
+                log.debug("fetchLoan finished");
 
                 return ResponseEntity
                                 .status(HttpStatus.OK)
@@ -209,7 +210,6 @@ public class LoansController {
                                 .status(HttpStatus.OK)
                                 .body("Java 21");
         }
-
 
         @Operation(summary = "Get environment variable", description = "Get the current value of an environment variable that is deployed for this service")
         @ApiResponses({
